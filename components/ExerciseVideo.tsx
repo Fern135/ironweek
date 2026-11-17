@@ -1,6 +1,6 @@
 /**
  * @file ExerciseVideo.tsx
- * @description An exercise's how-to clip, played like a GIF: muted, looping,
+ * @description An exercise's how-to clip, played like a GIF: muted, looping, whole frame shown (never cropped),
  * no controls, and without pausing your music. Tap for full screen.
  */
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -46,7 +46,7 @@ function Clip({ uri, height, expandable }: { uri: string; height: number; expand
         style={[styles.frame, { height, backgroundColor: colors.surfaceVariant }]}
       >
         {/* pointerEvents none so taps reach the Pressable, not the native video view. */}
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}><Loop uri={uri} fit="cover" /></View>
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}><Loop uri={uri} fit="contain" /></View>
       </Pressable>
       {expandable && (
         <Modal visible={full} animationType="fade" onRequestClose={() => setFull(false)}>

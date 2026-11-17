@@ -2,6 +2,11 @@
 
 Every commit adds an entry here, newest first.
 
+## 1.0.4 — November 16, 2026
+
+- **Bug fix:** exercise videos now show the whole clip in the workout and the workout editor, instead of a zoomed-in strip that cut off the top and bottom. Tall videos get plain bars on the sides.
+- **Bug fix:** when you skip a workout and type a reason, the box moves up above the keyboard instead of hiding behind it.
+
 ## 1.0.3 — November 5, 2026
 
 - **Last time** is now a tidy panel instead of one long line: the date at the top, then one row per group of sets with the count in its own column, like "3 sets: 10 reps × 40 lbs". Cardio shows one row per entry.
