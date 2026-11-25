@@ -1,10 +1,10 @@
 /**
  * @file store.ts
  * @description Zustand store holding the settings that screens render from
- * (unit label, theme, week start, rest time, sets per exercise, quick log), so a change in Settings re-renders everywhere.
+ * (unit label, theme, week start, rest time, sets per exercise, quick log, skip-rest question), so a change in Settings re-renders everywhere.
  */
 import { create } from 'zustand';
-import { getDefaultSets, getFirstDayOfWeek, getQuickLog, getRestSeconds, getTheme, getWeightUnit, setSetting, type FirstDayOfWeek, type ThemeSetting, type WeightUnit } from './settings';
+import { getConfirmSkipRest, getDefaultSets, getFirstDayOfWeek, getQuickLog, getRestSeconds, getTheme, getWeightUnit, setSetting, type FirstDayOfWeek, type ThemeSetting, type WeightUnit } from './settings';
 
 type AppState = {
   ready: boolean;
@@ -15,6 +15,8 @@ type AppState = {
   defaultSets: number;
   /** Show the ✓ that logs a set without starting the rest timer. */
   quickLog: boolean;
+  /** Skip rest asks "Are you sure?" first. */
+  confirmSkipRest: boolean;
   /** Loads persisted settings into the store; call once after initDb. */
   hydrate: () => Promise<void>;
   setWeightUnit: (unit: WeightUnit) => Promise<void>;
@@ -23,6 +25,7 @@ type AppState = {
   setRestSeconds: (secs: number) => Promise<void>;
   setDefaultSets: (sets: number) => Promise<void>;
   setQuickLog: (on: boolean) => Promise<void>;
+  setConfirmSkipRest: (on: boolean) => Promise<void>;
 };
 
 /**
@@ -37,12 +40,13 @@ export const useAppStore = create<AppState>((set) => ({
   restSeconds: 90,
   defaultSets: 3,
   quickLog: false,
+  confirmSkipRest: true,
 
   hydrate: async () => {
-    const [weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog] = await Promise.all([
-      getWeightUnit(), getTheme(), getFirstDayOfWeek(), getRestSeconds(), getDefaultSets(), getQuickLog(),
+    const [weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog, confirmSkipRest] = await Promise.all([
+      getWeightUnit(), getTheme(), getFirstDayOfWeek(), getRestSeconds(), getDefaultSets(), getQuickLog(), getConfirmSkipRest(),
     ]);
-    set({ weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog, ready: true });
+    set({ weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog, confirmSkipRest, ready: true });
   },
   setWeightUnit: async (weightUnit) => {
     await setSetting('weight_unit', weightUnit);
@@ -67,5 +71,9 @@ export const useAppStore = create<AppState>((set) => ({
   setQuickLog: async (quickLog) => {
     await setSetting('quick_log', String(quickLog));
     set({ quickLog });
+  },
+  setConfirmSkipRest: async (confirmSkipRest) => {
+    await setSetting('confirm_skip_rest', String(confirmSkipRest));
+    set({ confirmSkipRest });
   },
 }));

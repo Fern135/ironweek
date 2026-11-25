@@ -52,7 +52,7 @@ async function readNotif(): Promise<Notif> {
  */
 export default function SettingsScreen() {
   const { colors, fonts } = useTheme();
-  const { weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog, setWeightUnit, setTheme, setFirstDayOfWeek, setRestSeconds, setDefaultSets, setQuickLog, hydrate } = useAppStore();
+  const { weightUnit, theme, firstDayOfWeek, restSeconds, defaultSets, quickLog, confirmSkipRest, setWeightUnit, setTheme, setFirstDayOfWeek, setRestSeconds, setDefaultSets, setQuickLog, setConfirmSkipRest, hydrate } = useAppStore();
   const [notif, setNotif] = useState<Notif | null>(null);
   const [perm, setPerm] = useState<{ granted: boolean; canAskAgain: boolean } | null>(null);
   const [exactOk, setExactOk] = useState<boolean | null>(null);
@@ -232,6 +232,14 @@ export default function SettingsScreen() {
             left={(p) => <List.Icon {...p} icon="check-circle-outline" />}
             right={() => <Switch value={quickLog} onValueChange={(on) => save(setQuickLog(on))} />}
             onPress={() => save(setQuickLog(!quickLog))}
+          />
+          <List.Item
+            title="Ask before skipping rest"
+            description="Shows “Are you sure?” when you tap Skip rest"
+            descriptionNumberOfLines={3}
+            left={(p) => <List.Icon {...p} icon="timer-off-outline" />}
+            right={() => <Switch value={confirmSkipRest} onValueChange={(on) => save(setConfirmSkipRest(on))} />}
+            onPress={() => save(setConfirmSkipRest(!confirmSkipRest))}
           />
         </List.Section>
 

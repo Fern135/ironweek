@@ -127,6 +127,14 @@ export async function getQuickLog(): Promise<boolean> {
 }
 
 /**
+ * Whether Skip rest asks "Are you sure?" first.
+ * @returns True unless turned off in Settings
+ */
+export async function getConfirmSkipRest(): Promise<boolean> {
+  return (await getSetting('confirm_skip_rest')) !== 'false';
+}
+
+/**
  * @returns Target sets per exercise (1–10)
  */
 export async function getDefaultSets(): Promise<number> {

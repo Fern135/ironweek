@@ -2,12 +2,13 @@
  * @file RestTimer.tsx
  * @description Full-screen rest countdown. When it ends the phone vibrates
  * (and a notification fires if the app is in the background) until you tap
- * Stop; one second later you're back on the exercise.
+ * Stop; one second later you're back on the exercise. Skip rest asks first, unless turned off in Settings.
  */
 import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Vibration, View } from 'react-native';
-import { Button, Portal, Text, useTheme } from 'react-native-paper';
+import { Button, Dialog, Portal, Text, useTheme } from 'react-native-paper';
 import { cancelRestEnd, scheduleRestEnd } from '../lib/notifications';
+import { useAppStore } from '../lib/store';
 import { FONT, plate } from '../lib/theme';
 import { formatClock } from '../lib/workout';
 
@@ -33,6 +34,9 @@ export function RestTimer({ seconds, onFinish }: Props) {
   const [total, setTotal] = useState(seconds * 1000);
   const [startedAt] = useState(() => Date.now());
   const [pulse] = useState(() => new Animated.Value(1));
+
+  const confirmSkipRest = useAppStore((s) => s.confirmSkipRest);
+  const [asking, setAsking] = useState(false);
 
   const remaining = (endAt - now) / 1000;
 
@@ -65,6 +69,7 @@ export function RestTimer({ seconds, onFinish }: Props) {
     setEndAt((e) => Math.max(Date.now() + 1000, e + delta * 1000));
     setTotal((t) => Math.max(t + delta * 1000, 1000));
   };
+  const skip = () => onFinish(Date.now() - startedAt);
   const stop = () => {
     const rested = Date.now() - startedAt; // the 1 s "Next set" pause isn't rest
     Vibration.cancel();
@@ -87,7 +92,7 @@ export function RestTimer({ seconds, onFinish }: Props) {
               <Button mode="outlined" onPress={() => adjust(-15)}>−15 s</Button>
               <Button mode="outlined" onPress={() => adjust(15)}>+15 s</Button>
             </View>
-            <Button onPress={() => onFinish(Date.now() - startedAt)} style={{ marginTop: 8 }}>Skip rest</Button>
+            <Button onPress={confirmSkipRest ? () => setAsking(true) : skip} style={{ marginTop: 8 }}>Skip rest</Button>
           </>
         )}
         {phase === 'over' && (
@@ -99,6 +104,17 @@ export function RestTimer({ seconds, onFinish }: Props) {
           </>
         )}
         {phase === 'resuming' && <Text style={[styles.over, { color: colors.onSurface }]}>Next set</Text>}
+        {/* The clock keeps running behind it; if the rest ends first, the question goes away. */}
+        <Dialog visible={asking && phase === 'counting'} onDismiss={() => setAsking(false)}>
+          <Dialog.Title>Are you sure?</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">It&apos;s recommended to rest 2 to 3 minutes between sets.</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={skip}>Skip rest</Button>
+            <Button onPress={() => setAsking(false)}>Keep resting</Button>
+          </Dialog.Actions>
+        </Dialog>
       </View>
     </Portal>
   );

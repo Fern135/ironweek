@@ -19,6 +19,8 @@ export type DraftExercise = {
   clock?: CardioClock | null;
   /** Note to yourself about this exercise, shown in its Last time panel next time. */
   note?: string;
+  /** Days the note keeps showing, counted from the first time it's seen (see keepDays). */
+  noteDays?: number;
 };
 
 /** A workout in progress. Saved after every change so a killed app can resume it. */
@@ -115,6 +117,26 @@ export function groupSets(sets: LoggedSet[], unit: string): { text: string; n: n
     else groups.push({ text, n: 1 });
   }
   return groups;
+}
+
+/**
+ * How many days a note keeps showing: at least 1, and 1 if left blank.
+ * @param days - What was typed, if anything
+ * @returns Whole days
+ */
+export function keepDays(days?: number | null): number {
+  return Math.max(1, Math.floor(days ?? 1));
+}
+
+/**
+ * Whether a note's time is up. The clock starts the first time it's seen, so an unseen note never expires.
+ * @param shownAt - When it was first seen (ms since epoch), or null
+ * @param days - Days it keeps showing
+ * @param now - Current time (ms since epoch)
+ * @returns True once it should be hidden
+ */
+export function noteExpired(shownAt: number | null, days: number, now: number): boolean {
+  return shownAt !== null && now - shownAt >= days * 86_400_000;
 }
 
 /**

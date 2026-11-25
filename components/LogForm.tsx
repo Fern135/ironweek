@@ -69,6 +69,9 @@ export function LogForm({ exercises, onChange, notes, onNotesChange, unit }: Pro
           ))}
           <TextInput mode="outlined" dense label="Note to yourself" value={ex.note ?? ''} multiline
             onChangeText={(note) => update(i, (e) => ({ ...e, note }))} />
+          {!!ex.note?.trim() && (
+            <NumberField dense integer label="Keep for (days)" value={ex.noteDays ?? 1} onChange={(n) => update(i, (e) => ({ ...e, noteDays: n ?? undefined }))} />
+          )}
           <Button icon="plus" compact style={{ alignSelf: 'flex-start' }}
             onPress={() => update(i, (e) => ({ ...e, sets: [...e.sets, e.sets[e.sets.length - 1] ?? (e.cardio ? { reps: null, weight: null, seconds: 0 } : { reps: null, weight: null })] }))}>
             {ex.cardio ? 'Add entry' : 'Add set'}

@@ -3,7 +3,7 @@
  * @description Assert-based checks for workout.ts. Run with: npm test
  */
 import assert from 'node:assert/strict';
-import { clockElapsedMs, formatClock, formatDuration, formatSet, formatStopwatch, parseNum, setsLeftLabel, groupSets } from './workout';
+import { clockElapsedMs, formatClock, formatDuration, formatSet, formatStopwatch, keepDays, noteExpired, parseNum, setsLeftLabel, groupSets } from './workout';
 
 // Last-time groups: repeats in a row are grouped, changes keep their order.
 const s10 = { reps: 10, weight: 40 };
@@ -35,6 +35,15 @@ assert.equal(parseNum('-5'), null);
 assert.equal(formatSet({ reps: 10, weight: 135 }, 'lbs'), '10 reps × 135 lbs');
 assert.equal(formatSet({ reps: 10, weight: null }, 'kg'), '10 reps');
 assert.equal(formatSet({ reps: null, weight: null }, 'kg'), '—');
+
+// Notes to yourself: the clock starts when first seen.
+const day = 86_400_000;
+assert.equal(noteExpired(null, 1, 100 * day), false); // never seen
+assert.equal(noteExpired(0, 1, day - 1), false);
+assert.equal(noteExpired(0, 1, day), true);
+assert.equal(noteExpired(0, 3, 2 * day), false);
+assert.equal(noteExpired(0, 3, 3 * day), true);
+assert.deepEqual([keepDays(), keepDays(null), keepDays(0), keepDays(3)], [1, 1, 1, 3]);
 
 assert.equal(formatClock(90), '1:30');
 assert.equal(formatClock(5.2), '0:06');

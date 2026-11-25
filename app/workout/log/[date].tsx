@@ -24,13 +24,14 @@ import { ExerciseVideo } from '../../../components/ExerciseVideo';
 import { NumberField } from '../../../components/NumberField';
 import { ReasonDialog } from '../../../components/ReasonDialog';
 import { RestTimer } from '../../../components/RestTimer';
-import { getLastTime, getLogDetail, getSchedule, getTemplate, listTemplates, saveCompletedLog, skipWorkout, updateLogNotes, type LastTime as LastTimeData, type LogDetail, type TemplateSummary } from '../../../lib/db';
+import { getLastTime, getLogDetail, getSchedule, getTemplate, listTemplates, markNoteShown, saveCompletedLog, skipWorkout, updateLogNotes, type LastTime as LastTimeData, type LogDetail, type TemplateSummary } from '../../../lib/db';
 import { rescheduleAll } from '../../../lib/notifications';
 import { getWorkoutDraft, setWorkoutDraft } from '../../../lib/settings';
 import { useAppStore } from '../../../lib/store';
 import { FONT, plate } from '../../../lib/theme';
+import { useKeyboardLift } from '../../../lib/useKeyboardLift';
 import { toDateStr } from '../../../lib/week';
-import { clockElapsedMs, formatClock, formatDuration, formatSet, formatStopwatch, setsLeftLabel, groupSets, type DraftExercise, type LoggedSet, type WorkoutDraft } from '../../../lib/workout';
+import { clockElapsedMs, formatClock, formatDuration, formatSet, formatStopwatch, keepDays, setsLeftLabel, groupSets, type DraftExercise, type LoggedSet, type WorkoutDraft } from '../../../lib/workout';
 
 const SKIP_REASONS = ['Short on time', 'Feeling unwell', 'Low energy', 'Hungry', 'Sore'];
 
@@ -378,11 +379,17 @@ function Guided({ draft, setDraft, unit, restSeconds, targetSets, quickLog, onFi
   const [pending, setPending] = useState<LoggedSet>(lastSetOf(ex));
   const [previous, setPrevious] = useState<(LastTimeData & { name: string }) | null>(null);
   const [noting, setNoting] = useState<string | null>(null); // note being written, or null when the dialog is closed
+  const [noteDays, setNoteDays] = useState<number | null>(1);
+  const lift = useKeyboardLift();
   useEffect(() => {
     if (!ex) return;
     let live = true;
     getLastTime(ex.name, draft.date)
-      .then((p) => { if (live) setPrevious(p && { name: ex.name, ...p }); })
+      .then(async (p) => {
+        if (!live) return;
+        setPrevious(p && { name: ex.name, ...p });
+        if (p?.note) await markNoteShown(p.note.id);
+      })
       .catch(() => undefined); // nice to have; the workout works without it
     return () => { live = false; };
   }, [ex?.name, draft.date]); // eslint-disable-line react-hooks/exhaustive-deps -- only the name matters, not the whole exercise
@@ -419,7 +426,7 @@ function Guided({ draft, setDraft, unit, restSeconds, targetSets, quickLog, onFi
 
   const addDialog = (
     <Portal>
-      <Dialog visible={adding} onDismiss={() => setAdding(false)}>
+      <Dialog visible={adding} onDismiss={() => setAdding(false)} style={lift}>
         <Dialog.Title>Add exercise</Dialog.Title>
         <Dialog.Content>
           <TextInput mode="outlined" label="Exercise name" value={newName} onChangeText={setNewName} autoFocus onSubmitEditing={addExercise} />
@@ -487,19 +494,22 @@ function Guided({ draft, setDraft, unit, restSeconds, targetSets, quickLog, onFi
       </Button>
       <View style={styles.bottomRow}>
         <Button icon="plus" onPress={() => setAdding(true)}>Add exercise</Button>
-        <Button icon="note-edit-outline" onPress={() => setNoting(ex.note ?? '')}>{ex.note ? 'Edit note' : 'Note to yourself'}</Button>
+        <Button icon="note-edit-outline" onPress={() => { setNoteDays(ex.noteDays ?? 1); setNoting(ex.note ?? ''); }}>{ex.note ? 'Edit note' : 'Note to yourself'}</Button>
       </View>
-      {ex.note && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, paddingHorizontal: 12 }}>Your note: {ex.note}</Text>}
+      {ex.note && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, paddingHorizontal: 12 }}>Your note: {ex.note} (keep {keepDays(ex.noteDays)} {keepDays(ex.noteDays) === 1 ? 'day' : 'days'})</Text>}
       <Portal>
-        <Dialog visible={noting !== null} onDismiss={() => setNoting(null)}>
+        <Dialog visible={noting !== null} onDismiss={() => setNoting(null)} style={lift}>
           <Dialog.Title>Note to yourself</Dialog.Title>
           <Dialog.Content style={{ gap: 8 }}>
             <Text variant="bodyMedium">About {ex.name}. You&apos;ll see it under Last time next time.</Text>
             <TextInput mode="outlined" multiline value={noting ?? ''} onChangeText={setNoting} placeholder="e.g. Go up to 45 lbs" autoFocus style={{ minHeight: 88 }} />
+            {/* Keyed so it picks up this exercise's days each time the dialog opens. */}
+            <NumberField key={noting === null ? 'closed' : 'open'} integer label="Keep for (days)" value={noteDays} onChange={setNoteDays} />
+            <Text variant="bodySmall">Days count from the first time you see it.</Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setNoting(null)}>Cancel</Button>
-            <Button onPress={() => { setExercise((e) => ({ ...e, note: noting?.trim() || undefined })); setNoting(null); }}>Save</Button>
+            <Button onPress={() => { setExercise((e) => ({ ...e, note: noting?.trim() || undefined, noteDays: keepDays(noteDays) })); setNoting(null); }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

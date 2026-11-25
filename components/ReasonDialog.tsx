@@ -4,8 +4,9 @@
  * Used for skipping a workout and for explaining missed weeks.
  */
 import { useEffect, useState } from 'react';
-import { Keyboard, Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Dialog, HelperText, Portal, Text, TextInput } from 'react-native-paper';
+import { useKeyboardLift } from '../lib/useKeyboardLift';
 
 type Props = {
   visible: boolean;
@@ -27,14 +28,7 @@ export function ReasonDialog({ visible, title, body, presets, confirmLabel, onCo
   const [other, setOther] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [keyboard, setKeyboard] = useState(0);
-
-  // Paper's dialog stays centered on the whole screen, so the keyboard would cover the text box.
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (e) => setKeyboard(e.endCoordinates.height));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboard(0));
-    return () => { show.remove(); hide.remove(); };
-  }, []);
+  const lift = useKeyboardLift();
 
   // Start fresh each time it opens.
   useEffect(() => {
@@ -58,7 +52,7 @@ export function ReasonDialog({ visible, title, body, presets, confirmLabel, onCo
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={keyboard ? { marginBottom: keyboard + (Platform.OS === 'android' ? 44 : 0) } : undefined}>
+      <Dialog visible={visible} onDismiss={onDismiss} style={lift}>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Content>
           {body && <Text style={{ marginBottom: 12 }}>{body}</Text>}
