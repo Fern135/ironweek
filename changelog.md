@@ -6,12 +6,12 @@ Every commit adds an entry here, newest first.
 
 - **Keep for (days)** on each **Note to yourself**: choose how many days the note keeps showing in Last time. The default is 1 day (24 hours), counted from the first time you see the note in a workout, not from when you wrote it. After that it's hidden, but it stays in that day's workout in History. Notes you already wrote get 1 day, starting the next time you see them.
 - **Skip rest** now asks "Are you sure? It's recommended to rest 2 to 3 minutes between sets." Turn it off in Settings with **Ask before skipping rest**.
-- **Bug fix:** the Note to yourself and Add exercise boxes move up above the keyboard during a workout.
 
 ## 1.0.4 — November 16, 2026
 
 - **Bug fix:** exercise videos now show the whole clip in the workout and the workout editor, instead of a zoomed-in strip that cut off the top and bottom. Tall videos get plain bars on the sides.
 - **Bug fix:** when you skip a workout and type a reason, the box moves up above the keyboard instead of hiding behind it.
+- **Bug fix:** the Note to yourself and Add exercise boxes move up above the keyboard during a workout.
 
 ## 1.0.3 — November 5, 2026
 
