@@ -29,7 +29,7 @@ React Native Paper, expo-notifications, date-fns.
 
 ```bash
 git clone <this repo>
-cd m-gym-tracker
+cd ironweek
 npm install
 ```
 
